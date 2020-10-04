@@ -1,6 +1,4 @@
-module Turing
-    ( someFunc
-    ) where
+module Turing where
 
 someFunc :: IO ()
 someFunc = putStrLn "someFunc"
@@ -85,8 +83,17 @@ executeOperation op tape =
     case op of
         R -> right tape
         L -> left tape
-        P s ->  mapSecond (update (fst tape) s) tape
+        P s -> 
+            let
+                k = fst tape
+            in
+            if k /= 0
+                then mapSecond (update k s) tape
+                else mapSecond (update (k + 1) s) (prependBlank tape)
+                
 
+prependBlank :: Tape -> Tape
+prependBlank (k, symbols) = (k+1, blank:symbols)
 
 update :: Int -> a -> [a] -> [a]
 update k a as = 
@@ -122,7 +129,7 @@ showTape k tape =
         last = drop (n + 1) symbols |> joinStrings ":"
        
     in
-        first ++ ":(" ++ show n ++ ":" ++ current  ++ "):" ++ last
+        first ++ ":(" ++ current  ++ "." ++ show n ++ "):" ++ last
 
 showTape' :: Int -> Tape -> String
 showTape' k tape =
@@ -143,7 +150,7 @@ showConfig' n (state, tape) =
 
 
 left :: Tape -> Tape
-left (0, symbols) = (0, symbols)
+left (0, symbols) = (0, blank:symbols)
 left (k, symbols) = (k - 1, symbols)
 
 right :: Tape -> Tape
@@ -219,19 +226,27 @@ mAdd = [
 tAdd = initializeTape ["1", "1", "1", blank, "1", "1", "1","1"]
 cAdd = ("A", tAdd)
 
-mSqrt :: Table
-mSqrt = [
+
+-- SQUARE ROOT
+
+
+mList :: Table
+mList = [
     Row { initial = "B", symbol = blank, operations = [P "0"], final = "I"}, 
 
     Row { initial = "I", symbol = "0", operations = [P "1"], final = "R"}, 
     Row { initial = "I", symbol = "1", operations = [P "0", L], final = "I"}, 
-    Row { initial = "I", symbol = blank, operations = [P "1", R], final = "R"}, 
+    Row { initial = "I", symbol = blank, operations = [P "1"], final = "R"}, 
 
     Row { initial = "R", symbol = blank, operations = [L], final = "I"}, 
     Row { initial = "R", symbol = "0", operations = [R], final = "R"}, 
     Row { initial = "R", symbol = "1", operations = [R], final = "R"}
    ]
 
-tSqrt = initializeTape []
-cSqrt = ("B", tSqrt)
+tList = initializeTape []
+cList= ("B", tList)
+
+advanceList n = advanceN mList  n cList |> showConfig 30
+
+advanceList' n = advanceN  mList n cList |> showConfig' 30
 
