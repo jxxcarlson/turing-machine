@@ -1,4 +1,5 @@
-module Turing where
+module Turing
+ where
 
 someFunc :: IO ()
 someFunc = putStrLn "someFunc"
@@ -6,15 +7,29 @@ someFunc = putStrLn "someFunc"
 
 type State = String
 type Symbol = String
-data Operation = L | R | P Symbol
+
+-- Move left or right, or print a symbol
+data Operation = L | R | P Symbol 
+
+-- Int is the location of the reading head
+-- The tap is implemented as being infnite on the right,
+-- but we add blank cells on the left as needed, so
+-- that it is effectively two-dimensional
 type Tape = (Int, [Symbol])
 
+
+-- A row in the table of "machine instructions"
 data Row = Row {
       initial :: State,
       symbol :: Symbol,
       operations :: [Operation],
       final :: State
   } 
+
+type Table = [Row]
+
+
+-- Show stuff
 
 instance Show Operation where
    show op = case op of
@@ -26,6 +41,7 @@ instance Show Row where
   show (Row initial symbol operations final )= initial ++ ", " ++ symbol ++ ", " ++ show operations ++ " => " ++ final
 
 
+
 showTable :: Table -> String
 showTable table = 
     joinStrings "; " (fmap show table)
@@ -34,10 +50,42 @@ blank :: Symbol
 blank = "_"
 
 
--- TABLE
+initialSegment :: Int -> Tape -> Tape
+initialSegment k (n, symbols) = (n, take k symbols)
 
-type Table = [Row]
+showTape :: Int -> Tape -> String
+showTape k tape =
+    let 
+        symbols = tape |> initialSegment k |> snd
+        n = fst tape
+        first = take n symbols  |> joinStrings ":"
+        current = symbols !! n
+        last = drop (n + 1) symbols |> joinStrings ":"
+       
+    in
+        first ++ ":(" ++ current  ++ "." ++ show n ++ "):" ++ last
 
+showTape' :: Int -> Tape -> String
+showTape' k tape =
+    tape 
+      |> initialSegment k 
+      |> snd
+      |> fmap (\s -> if s == blank then " " else s)
+      |> joinStrings ""
+
+
+showConfig :: Int -> (State, Tape) -> (State, String)
+showConfig n (state, tape) =
+    (state, showTape n tape)
+
+showConfig' :: Int -> (State, Tape) -> (State, Int, String)
+showConfig' n (state, tape) =
+    (state, (fst tape), showTape' n tape)  
+
+
+
+
+-- OPERATINNG THE MACHINE
 
 matchState :: State -> [Row] -> [Row]
 matchState  state table  = 
@@ -92,8 +140,37 @@ executeOperation op tape =
                 else mapSecond (update (k + 1) s) (prependBlank tape)
                 
 
+
+--TAPE  
+ 
+blankTape :: [Symbol]
+blankTape = repeat blank
+
+initializeTape :: [Symbol] -> Tape
+initializeTape symbols = (0, symbols ++ blankTape)
+
+-- Use this to pretend that the tape is infinite
+-- in both directions
 prependBlank :: Tape -> Tape
 prependBlank (k, symbols) = (k+1, blank:symbols)
+
+left :: Tape -> Tape
+left (0, symbols) = (0, blank:symbols)
+left (k, symbols) = (k - 1, symbols)
+
+right :: Tape -> Tape
+right (k, symbols) = (k + 1, symbols)
+
+
+-- HELPERS
+
+(|>) :: a -> (a -> b) -> b
+(|>) a f = f a
+
+joinStrings :: String -> [String] -> String
+joinStrings _ [] = ""
+joinStrings sep strings = 
+    foldl (\str acc -> str ++ sep ++ acc) (head strings) (tail strings)
 
 update :: Int -> a -> [a] -> [a]
 update k a as = 
@@ -108,79 +185,6 @@ mapFirst f (a,b) = (f a, b)
 mapSecond :: (b -> b) -> (a, b) -> (a, b)
 mapSecond f (a,b) = (a, f b)
 
---TAPE  
- 
-blankTape :: [Symbol]
-blankTape = repeat blank
-
-initializeTape :: [Symbol] -> Tape
-initializeTape symbols = (0, symbols ++ blankTape)
-
-initialSegment :: Int -> Tape -> Tape
-initialSegment k (n, symbols) = (n, take k symbols)
-
-showTape :: Int -> Tape -> String
-showTape k tape =
-    let 
-        symbols = tape |> initialSegment k |> snd
-        n = fst tape
-        first = take n symbols  |> joinStrings ":"
-        current = symbols !! n
-        last = drop (n + 1) symbols |> joinStrings ":"
-       
-    in
-        first ++ ":(" ++ current  ++ "." ++ show n ++ "):" ++ last
-
-showTape' :: Int -> Tape -> String
-showTape' k tape =
-    tape 
-      |> initialSegment k 
-      |> snd
-      |> fmap (\s -> if s == blank then " " else s)
-      |> joinStrings ""
-
-
-showConfig :: Int -> (State, Tape) -> (State, String)
-showConfig n (state, tape) =
-    (state, showTape n tape)
-
-showConfig' :: Int -> (State, Tape) -> (State, Int, String)
-showConfig' n (state, tape) =
-    (state, (fst tape), showTape' n tape)    
-
-
-left :: Tape -> Tape
-left (0, symbols) = (0, blank:symbols)
-left (k, symbols) = (k - 1, symbols)
-
-right :: Tape -> Tape
-right (k, symbols) = (k + 1, symbols)
-
-testTape :: Tape
-testTape = initializeTape ["A", "B", "C", "D"]
-
-
-
--- HELPERS
-
-(|>) :: a -> (a -> b) -> b
-(|>) a f = f a
-
-joinStrings :: String -> [String] -> String
-joinStrings _ [] = ""
-joinStrings sep strings = 
-    foldl (\str acc -> str ++ sep ++ acc) (head strings) (tail strings)
-
-
--- TEST DATA
-
-a = advance m1
-t0 = initializeTape []
-c0 = ("b", t0)
-
-a' = advance m2
-t0' = initializeTape []
-c0' = ("b", t0')
 
 
 -- MACHINES
@@ -227,9 +231,10 @@ tAdd = initializeTape ["1", "1", "1", blank, "1", "1", "1","1"]
 cAdd = ("A", tAdd)
 
 
--- SQUARE ROOT
+-- ENUMERATE THE NATURAL NUMBERS IN BINARY
 
 
+-- Instuction Table for the machine
 mList :: Table
 mList = [
     Row { initial = "B", symbol = blank, operations = [P "0"], final = "I"}, 
@@ -243,10 +248,22 @@ mList = [
     Row { initial = "R", symbol = "1", operations = [R], final = "R"}
    ]
 
+-- Inital tape and configuration
 tList = initializeTape []
 cList= ("B", tList)
+
 
 advanceList n = advanceN mList  n cList |> showConfig 30
 
 advanceList' n = advanceN  mList n cList |> showConfig' 30
+
+-- TEST DATA
+
+a = advance m1
+t0 = initializeTape []
+c0 = ("b", t0)
+
+a' = advance m2
+t0' = initializeTape []
+c0' = ("b", t0')
 
