@@ -1,10 +1,10 @@
 module Machine.M2 where
 
-import Turing
+import Turing (Table, Row(..), Operation(..), blank)
 
 
 machine :: Table
-mmachine = [
+machine = [
       Row { initial = "b", symbol = "Any", operations = [P "E", R, P "E", R, P "0", R, R, P "0", L, L], final = "o"}, 
      
       Row { initial = "o", symbol = "1", operations = [R, P "x", L, L, L], final = "o"}, 

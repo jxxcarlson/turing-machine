@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 1be6ccd97b64049ce74e179f2568a038ae52663d5a6adddab970e99368e62689
+-- hash: 9090a776d803181ecffaa225902bd3a57abeaaf7194778dfaab74929b00a3af7
 
 name:           turing
 version:        0.1.0.0
@@ -27,11 +27,7 @@ source-repository head
 
 library
   exposed-modules:
-      Exec
-      Machine.Add
       Machine.EnumerateN
-      Machine.M1
-      Machine.M2
       Turing
   other-modules:
       Paths_turing
@@ -51,6 +47,7 @@ executable turing-exe
   build-depends:
       base >=4.7 && <5
     , turing
+    , drinkery >=0.4
   default-language: Haskell2010
 
 test-suite turing-test
@@ -64,4 +61,5 @@ test-suite turing-test
   build-depends:
       base >=4.7 && <5
     , turing
+    , drinkery >=0.4
   default-language: Haskell2010

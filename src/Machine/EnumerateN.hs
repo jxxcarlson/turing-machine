@@ -1,6 +1,6 @@
 module Machine.EnumerateN where
 
-import Turing -- (Table, Row, initial, final, symbol, operations)
+import Turing (Table, Row(..), Operation(..), blank, initializeTape)
 
 -- ENUMERATE THE NATURAL NUMBERS IN BINARY
 

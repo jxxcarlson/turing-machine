@@ -1,6 +1,7 @@
 module Machine.Add where
 
-import Turing
+
+import Turing (Table, Row(..), Operation(..), blank, initializeTape)
 
 
 machine :: Table
@@ -11,4 +12,4 @@ machine = [
   ]
 
 initialTape = initializeTape ["1", "1", "1", blank, "1", "1", "1","1"]
-initialConfiguration = ("A", tAdd)
+initialConfiguration = ("A", initialTape)

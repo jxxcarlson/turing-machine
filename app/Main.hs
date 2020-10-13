@@ -1,21 +1,36 @@
 module Main where
 
-import Turing (advanceN, showConfig, showConfig', (|>))
-import Control.Monad
-import Data.Drinkery.Combinators
-import Machine.EnumerateN
+import           System.IO  
+import           Control.Monad (unless)
+import           System.IO
+import           Exec (exec)
 
 
-main :: IO ()
+main :: IO()
 main =
-    let
-        actions :: [IO()]
-        actions = map (\n -> putStrLn $ (show n ++ ": " ++ show (advanceAndShow'  n)) ) [0..100]
-    in
-      do 
-          sequence_ actions
+  do
+    putStrLn "\n\nType 'help' if you need to\nType ':quit' to quit\n\nExample:\n\n  > stats whitman.txt\n\n"
+    loop
 
-advanceAndShow n = advanceN machine n initalConfiguration |> showConfig 30
+loop :: IO ()
+loop = do
+  input <- read'
+  unless (input == ":quit")
+       $ exec input -- print' (eval' input)
+      >> loop
 
-advanceAndShow' n = advanceN machine n initalConfiguration |> showConfig' 30
+
+read' :: IO String
+read' = putStr "REPL> "
+     >> hFlush stdout
+     >> getLine
+
+
+eval' :: String -> String
+eval' input =
+  "input: " ++ input
+
+
+print' :: String -> IO ()
+print' = putStrLn
 

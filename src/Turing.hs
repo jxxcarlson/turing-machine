@@ -1,4 +1,4 @@
-module Turing
+module Turing (advanceN, Table, Row(..), Operation(..), blank, initializeTape, showConfig, showConfig', (|>))
  where
 
 someFunc :: IO ()
